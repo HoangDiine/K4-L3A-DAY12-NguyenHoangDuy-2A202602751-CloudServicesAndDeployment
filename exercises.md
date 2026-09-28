@@ -143,4 +143,6 @@ Ghi lại **một** lỗi bạn gặp khi deploy lên cloud (build fail, health 
 timeout, sai REDIS_URL, app không đọc `$PORT`...): thông báo lỗi là gì, bạn
 tìm ra nguyên nhân bằng cách nào, và sửa ra sao?
 
-> *Câu trả lời của bạn*
+> - **Thông báo lỗi:** Service Redis bị crash với log `/bin/sh: 1: exec: docker-entrypoint.sh: not found` và khi gọi `/ready` bị trả về lỗi `503 Service Unavailable` (`{"status":"not ready","redis":false}`).
+> - **Nguyên nhân:** Khi chạy lệnh `railway up`, do chưa chỉ định service nên CLI đã vô tình deploy code app FastAPI đè lên chính service Redis. Service này vẫn giữ lệnh chạy mặc định của Redis (`docker-entrypoint.sh`), nhưng image Python app không có file đó nên bị sập.
+> - **Cách sửa:** Tôi xóa service Redis bị lỗi, tạo lại service Redis chuẩn và tạo thêm một service riêng tên là `agent` (`railway add --service agent`). Sau đó cấu hình biến môi trường `REDIS_URL=${{Redis.REDIS_URL}}` cho `agent` và deploy code vào đúng service `agent`. Cả 2 service đều online và `/ready` trả về `200 OK`.
